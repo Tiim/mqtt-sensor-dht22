@@ -1,13 +1,22 @@
 
-#if __has_include("keys_private.h")
-
 #include "keys_private.h"
 
-#else
+#ifndef STASSID
+#error STASSID not set in keys_private.h
+#endif
 
-#define STASSID "WIFI NAME"
-#define STAPSK "WIFI PASSWORD"
-#define MQTT_BROKER "mqtt.broker.host"
-#define MQTT_USER "MQTTUsername"
-#define MQTT_PASS "MQTTPassword"
+#ifndef STAPSK
+#error STAPSK (wifi password) not set in keys_private.h
+#endif
+
+#ifndef MQTT_BROKER
+#error MQTT_BROKER not set in keys_private.h
+#endif
+
+#ifndef MQTT_USER
+#error MQTT_USER not set in keys_private.h
+#endif
+
+#ifndef MQTT_PASS
+#error MQTT_PASS not set in keys_private.h
 #endif
