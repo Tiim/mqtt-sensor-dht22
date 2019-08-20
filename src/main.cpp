@@ -4,6 +4,7 @@
 */
 
 #include <ESP8266WiFi.h>
+#include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 #include <DHT.h>
 #include <ArduinoJson.h>
@@ -17,31 +18,34 @@ const char *mqtt_user = MQTT_USER;
 const char *mqtt_password = MQTT_PASS;
 
 #define DHTTYPE DHT22 // DHT 22  (AM2302), AM2321
-
 #define DHTPIN D2
 
+const char *ca_cert PROGMEM = CA_CERTIFICATE;
+
 DHT dht(DHTPIN, DHTTYPE);
-WiFiClient client;
-PubSubClient mqtt(client);
+WiFiClientSecure client;
+PubSubClient mqtt(MQTT_BROKER, MQTT_PORT, client);
 
 void publish();
-void wifi_connect();
-void mqtt_connect();
+void load_certificate();
+void connect_wifi();
+void connect_mqtt();
 
 void setup()
 {
   Serial.begin(115200);
+  Serial.println();
+  Serial.println();
+  load_certificate();
+  connect_wifi();
   dht.begin();
-  wifi_connect();
-  mqtt.setServer(MQTT_BROKER, 1883);
 }
 
 void loop()
 {
-  dht.begin();
   if (!mqtt.connected())
   {
-    mqtt_connect();
+    connect_mqtt();
   }
   mqtt.loop();
   publish();
@@ -64,7 +68,7 @@ void publish()
   Serial.println(s);
 }
 
-void mqtt_connect()
+void connect_mqtt()
 {
   while (!mqtt.connected())
   {
@@ -80,12 +84,9 @@ void mqtt_connect()
   Serial.println("  Connected");
 }
 
-void wifi_connect()
+void connect_wifi()
 {
   // We start by connecting to a WiFi network
-
-  Serial.println();
-  Serial.println();
   Serial.print("Connecting to ");
   Serial.println(ssid);
 
@@ -102,4 +103,10 @@ void wifi_connect()
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+}
+
+void load_certificate()
+{
+  static BearSSL::X509List ca(ca_cert);
+  client.setTrustAnchors(&ca);
 }
