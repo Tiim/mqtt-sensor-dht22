@@ -30,6 +30,7 @@ void publish();
 void load_certificate();
 void connect_wifi();
 void connect_mqtt();
+String get_device_id();
 
 void setup()
 {
@@ -55,16 +56,19 @@ void loop()
 void publish()
 {
   float h = dht.readHumidity();
-  // Read temperature as Celsius (the default)
   float t = dht.readTemperature();
+
   String s;
   const int capacity = JSON_OBJECT_SIZE(3);
   StaticJsonDocument<capacity> doc;
   doc["temperature"] = t;
   doc["humidity"] = h;
   serializeJson(doc, s);
-  mqtt.publish("TiimB/feeds/sensor-test", s.c_str());
-  Serial.print("Published: ");
+
+  String topic = "sensor/" + get_device_id();
+  mqtt.publish(topic.c_str(), s.c_str());
+  Serial.print("Published to ");
+  Serial.println(topic);
   Serial.println(s);
 }
 
@@ -109,4 +113,15 @@ void load_certificate()
 {
   static BearSSL::X509List ca(ca_cert);
   client.setTrustAnchors(&ca);
+}
+
+String get_device_id()
+{
+  String id = WiFi.macAddress();
+  int idx;
+  while ((idx = id.indexOf(':')) > -1)
+  {
+    id.remove(idx, 1);
+  }
+  return id.substring(0, 6);
 }
